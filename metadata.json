@@ -1,0 +1,8 @@
+{
+  "name": "KyotoTrip",
+  "description": "專為親友設計的京都旅遊小工具，包含行程規畫、拆帳記帳與 AI 翻譯。",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}
