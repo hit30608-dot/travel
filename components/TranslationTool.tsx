@@ -45,7 +45,7 @@ const TranslationTool: React.FC = () => {
 
   const speak = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ja-JP';
+    utterance.lang = 'zh-TW'; // Fixed: Output is Trad-Chinese, so speak Chinese
     window.speechSynthesis.speak(utterance);
   };
 
@@ -63,14 +63,14 @@ const TranslationTool: React.FC = () => {
         </div>
 
         <div className="relative mb-4">
-          <textarea 
+          <textarea
             rows={5}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="w-full bg-gray-50 rounded-[2rem] p-6 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all border-none leading-relaxed"
             placeholder="請輸入文字或使用語音輸入..."
           />
-          <button 
+          <button
             onClick={startVoiceInput}
             className={`absolute right-4 bottom-4 p-4 rounded-full shadow-2xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white text-primary hover:scale-110 active:scale-95'}`}
           >
@@ -78,7 +78,7 @@ const TranslationTool: React.FC = () => {
           </button>
         </div>
 
-        <button 
+        <button
           disabled={loading || !input.trim()}
           onClick={handleTranslate}
           className={`w-full py-5 rounded-[2rem] font-black text-white shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 transition-all active:scale-95 ${loading ? 'bg-gray-300' : 'bg-primary'}`}
@@ -122,8 +122,8 @@ const TranslationTool: React.FC = () => {
                   <div className="text-[10px] font-black text-secondary mb-1">翻譯結果</div>
                   <div className="flex justify-between items-end gap-4">
                     <p className="text-lg font-black text-gray-800 leading-relaxed font-serif flex-1">{record.translated}</p>
-                    <button 
-                      onClick={() => { navigator.clipboard.writeText(record.translated); setCopiedId(record.id); setTimeout(()=>setCopiedId(null), 2000); }}
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(record.translated); setCopiedId(record.id); setTimeout(() => setCopiedId(null), 2000); }}
                       className={`p-3 rounded-2xl transition-all ${copiedId === record.id ? 'bg-green-50 text-green-500' : 'bg-gray-50 text-gray-400'}`}
                     >
                       {copiedId === record.id ? <Check size={16} /> : <Copy size={16} />}
