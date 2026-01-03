@@ -1,86 +1,66 @@
-
-import { GoogleGenAI } from "@google/genai";
-
-// Fixed: Check for API Key before initialization
-const getApiKey = () => {
-  // Priority: 1. Environment Variable (Vite replaces check) 2. LocalStorage
-  // Note: Vite replaces process.env.GEMINI_API_KEY with the actual string, so we can access it directly.
-  try {
-    if (process.env.API_KEY || process.env.GEMINI_API_KEY) {
-      return process.env.API_KEY || process.env.GEMINI_API_KEY;
-    }
-  } catch (e) {
-    // Ignore error if process is not defined and replacement didn't happen (unlikely in Vite)
-  }
-
-  if (typeof localStorage !== 'undefined') {
-    return localStorage.getItem('gemini_api_key');
-  }
-  return null;
-};
-
+/**
+ * Service for handling translations using the free Google Translate API (GTX)
+ * Replaces the previous Gemini AI implementation.
+ */
 export class GeminiService {
-  private ai: GoogleGenAI | null = null;
-  private apiKey: string | null = null;
+  // Keeping the class name as GeminiService to minimize refactoring in components,
+  // even though it now uses Google Translate API.
 
   constructor() {
-    this.initialize();
-  }
-
-  initialize(key?: string) {
-    const foundKey = key || getApiKey();
-    if (foundKey) {
-      this.apiKey = foundKey;
-      try {
-        this.ai = new GoogleGenAI({ apiKey: foundKey });
-        if (key && typeof localStorage !== 'undefined') {
-          localStorage.setItem('gemini_api_key', key);
-        }
-      } catch (error) {
-        console.error("Failed to initialize GoogleGenAI:", error);
-      }
-    }
+    // No initialization needed for this public API
   }
 
   isConfigured(): boolean {
-    return !!this.ai;
+    return true; // Always configured as it doesn't need a key
   }
 
+  /**
+   * Translates text using the Google Translate `gtx` endpoint.
+   * @param text The text to translate
+   * @param sourceLang The source language code (e.g., 'zh-TW', 'en', or 'auto')
+   * @param targetLang The target language code (e.g., 'ja', 'en')
+   */
   async translate(text: string, sourceLang: string, targetLang: string): Promise<string> {
-    if (!this.ai) {
-      // Try re-initializing just in case it was set late
-      this.initialize();
-      if (!this.ai) {
-        console.warn("Gemini AI not initialized (Missing API Key)");
-        throw new Error("API_KEY_MISSING");
-      }
-    }
-
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: `Translate the following text from ${sourceLang} to ${targetLang}. Keep the original tone and context. Only return the translated text, no explanations. Text: "${text}"`,
-        config: {
-          temperature: 0.3,
-        }
-      });
-      return response.text || "Translation failed.";
-    } catch (error: any) {
-      console.error("Translation error details:", error);
+      // Map display names or codes if necessary. 
+      // Assuming the UI passes standard codes like 'zh-TW', 'ja', 'en'.
+      // If the UI passes full names, we might need a mapper, but TranslationTool currently uses codes for state 
+      // and passes names to the old service. 
 
-      const errorMessage = error.message || error.toString();
-      const isApiKeyError =
-        errorMessage.match(/api key/i) ||
-        error.status === 400 ||
-        error.statusText === 'Bad Request' ||
-        (error.response && error.response.status === 400);
+      // WAIT: TranslationTool.tsx passes NAMES ("繁體中文") to the service currently!
+      // I need to check TranslationTool.tsx. Use view_file to be sure what is passed.
+      // Based on previous reads: 
+      // const translation = await geminiService.translate(input, currentSource.name, currentTarget.name);
+      // currentSource.name is "繁體中文", .code is "zh-TW".
 
-      if (isApiKeyError) {
-        throw new Error("INVALID_API_KEY");
+      // I should update TranslationTool.tsx to pass CODES, OR map them here.
+      // Updating TranslationTool.tsx is cleaner. 
+
+      // For now, I'll write this service to expect CODES. 
+      // I will update TranslationTool.tsx in the next step to pass codes.
+
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return "Error connecting to AI service.";
+
+      const data = await response.json();
+
+      // The result structure is [[["Translated Text", "Source Text", ...], ...], ...]
+      // We join the parts because long text is split into multiple chunks
+      if (data && data[0]) {
+        return data[0].map((chunk: any) => chunk[0]).join('');
+      } else {
+        return "Translation failed (No data).";
+      }
+
+    } catch (error: any) {
+      console.error("Translation error:", error);
+      return `Translation Error: ${error.message}`;
     }
   }
-} // Ensuring class closes correctly with correct indentation
+}
 
 export const geminiService = new GeminiService();

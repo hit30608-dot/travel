@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
-import { Languages, Mic, Sparkles, Copy, Check, Trash2, History, RotateCcw, Volume2, ArrowRightLeft, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { Languages, Mic, Sparkles, Copy, Check, Trash2, History, Volume2, ArrowRightLeft } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
 import { TranslationRecord } from '../types';
 
@@ -10,6 +9,7 @@ const LANGUAGES = [
   { code: 'en', name: '英文', voice: 'en-US' },
   { code: 'ko', name: '韓文', voice: 'ko-KR' },
   { code: 'th', name: '泰文', voice: 'th-TH' },
+  { code: 'vi', name: '越南文', voice: 'vi-VN' },
 ];
 
 const TranslationTool: React.FC = () => {
@@ -21,25 +21,16 @@ const TranslationTool: React.FC = () => {
 
   const [sourceLang, setSourceLang] = useState('zh-TW'); // Default source
   const [targetLang, setTargetLang] = useState('ja');    // Default target
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState('');
 
   const currentSource = LANGUAGES.find(l => l.code === sourceLang) || LANGUAGES[0];
   const currentTarget = LANGUAGES.find(l => l.code === targetLang) || LANGUAGES[1];
-
-  useEffect(() => {
-    // Check if API key is missing on mount
-    if (!geminiService.isConfigured()) {
-      // Only show if strictly necessary or maybe let user discover it via error?
-      // Let's rely on error handling to show it, or check local storage
-    }
-  }, []);
 
   const handleTranslate = async () => {
     if (!input.trim()) return;
     setLoading(true);
     try {
-      const translation = await geminiService.translate(input, currentSource.name, currentTarget.name);
+      // Pass CODES instead of NAMES for the new API
+      const translation = await geminiService.translate(input, currentSource.code, currentTarget.code);
       const newRecord: TranslationRecord = {
         id: Date.now().toString(),
         original: input,
@@ -47,24 +38,11 @@ const TranslationTool: React.FC = () => {
         timestamp: Date.now()
       };
       setHistory([newRecord, ...history]);
-      // setInput(''); // Keep input for corrections
     } catch (error: any) {
-      if (error.message === 'API_KEY_MISSING' || error.message === 'INVALID_API_KEY') {
-        setShowApiKeyInput(true);
-        alert("請輸入有效的 Google Gemini API Key 以使用翻譯功能。");
-      } else {
-        alert("翻譯失敗，請稍後再試。");
-      }
+      alert("翻譯失敗，請稍後再試。");
     } finally {
       setLoading(false);
     }
-  };
-
-  const saveApiKey = () => {
-    if (!apiKeyInput.trim()) return;
-    geminiService.initialize(apiKeyInput.trim());
-    setShowApiKeyInput(false);
-    alert("API Key 已儲存！請重新嘗試翻譯。");
   };
 
   const startVoiceInput = () => {
@@ -98,35 +76,6 @@ const TranslationTool: React.FC = () => {
   return (
     <div className="space-y-8 pb-24 animate-in fade-in duration-500">
       <div className="bg-white rounded-[2.5rem] p-6 shadow-soft border border-gray-100 relative">
-        {/* Settings / API Key Button */}
-        <button
-          onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-          className="absolute top-6 right-6 text-gray-300 hover:text-primary transition-colors"
-        >
-          <Settings size={20} />
-        </button>
-
-        {showApiKeyInput && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-200 animate-in slide-in-from-top-2">
-            <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">API Key 設定</label>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="貼上您的 Gemini API Key"
-                className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary"
-              />
-              <button
-                onClick={saveApiKey}
-                className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20"
-              >
-                儲存
-              </button>
-            </div>
-            <p className="text-[10px] text-gray-400 mt-2">Key 會儲存在瀏覽器中。如果翻譯出現錯誤，請檢查 Key 是否正確。</p>
-          </div>
-        )}
 
         <div className="flex items-center gap-3 mb-8">
           <div className="bg-primary/10 p-4 rounded-3xl text-primary">
