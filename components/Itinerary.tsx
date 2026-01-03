@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  Clock, MapPin, Building, Plane, Trash2, PlusCircle, Edit3, 
+import {
+  Clock, MapPin, Building, Plane, Trash2, PlusCircle, Edit3,
   Calendar, X, Save, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { ItineraryItem, ItemType, FlightInfo, Accommodation, TripSettings } from '../types';
@@ -17,9 +17,9 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
     const dates: string[] = [];
     let curr = new Date(tripSettings.startDate);
     const end = new Date(tripSettings.endDate);
-    
+
     // 安全檢查，避免無限循環
-    const maxDays = 30; 
+    const maxDays = 30;
     let count = 0;
 
     while (curr <= end && count < maxDays) {
@@ -34,7 +34,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
     { id: '1', date: '2024-11-15', startTime: '09:00', type: ItemType.SIGHTSEEING, location: '渡月橋', note: '早上適合散步，風景極佳', mapsUrl: 'https://maps.app.goo.gl/arashiyama' },
     { id: '2', date: '2024-11-15', startTime: '12:00', type: ItemType.FOOD, location: '嵐山 蕎麥麵', note: '需提前排隊', mapsUrl: 'https://maps.app.goo.gl/soba' }
   ]);
-  
+
   const [flights, setFlights] = useState<FlightInfo[]>([
     { id: 'f1', type: '去程', flightNo: 'JX802', time: '11/15 08:30', airport: 'TPE -> KIX' },
     { id: 'f2', type: '回程', flightNo: 'JX803', time: '11/20 15:50', airport: 'KIX -> TPE' }
@@ -129,8 +129,8 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
       {/* 航班與住宿摘要 */}
       <section className="grid grid-cols-2 gap-3">
         {flights.map((f, idx) => (
-          <div 
-            key={f.id} 
+          <div
+            key={f.id}
             onClick={() => { setEditType('FLIGHT'); setSelectedFlightIdx(idx); setTempFlight(f); }}
             className="bg-white rounded-3xl p-4 shadow-soft border border-gray-100 cursor-pointer hover:border-primary/30 transition-all relative group"
           >
@@ -145,7 +145,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
         ))}
       </section>
 
-      <section 
+      <section
         onClick={() => { setEditType('HOTEL'); setTempHotel(accommodation); }}
         className="bg-primary text-white rounded-[2rem] p-6 shadow-xl relative overflow-hidden group cursor-pointer"
       >
@@ -163,7 +163,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
 
       {/* 日期切換器 */}
       <div className="flex items-center justify-between bg-white rounded-full p-2 shadow-soft border border-gray-100">
-        <button 
+        <button
           onClick={handlePrevDay}
           disabled={currentDate === allDates[0]}
           className={`p-2 transition-colors ${currentDate === allDates[0] ? 'text-gray-100' : 'text-primary hover:bg-gray-50 rounded-full'}`}
@@ -176,7 +176,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
           </span>
           <span className="text-sm font-black text-primary font-serif">{currentDate}</span>
         </div>
-        <button 
+        <button
           onClick={handleNextDay}
           disabled={currentDate === allDates[allDates.length - 1]}
           className={`p-2 transition-colors ${currentDate === allDates[allDates.length - 1] ? 'text-gray-100' : 'text-primary hover:bg-gray-50 rounded-full'}`}
@@ -191,11 +191,11 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
           <h2 className="text-xl font-black text-primary font-serif flex items-center gap-2">
             <Calendar size={20} /> 每日明細
           </h2>
-          <button 
-            onClick={() => { 
-              setIsEditingItem(false); 
-              setItemForm({ date: currentDate, type: ItemType.SIGHTSEEING, startTime: '10:00', location: '', note: '', mapsUrl: '' }); 
-              setEditType('ITEM_FORM'); 
+          <button
+            onClick={() => {
+              setIsEditingItem(false);
+              setItemForm({ date: currentDate, type: ItemType.SIGHTSEEING, startTime: '10:00', location: '', note: '', mapsUrl: '' });
+              setEditType('ITEM_FORM');
             }}
             className="bg-secondary text-white p-3 rounded-2xl shadow-lg shadow-secondary/20 hover:scale-110 transition-all"
           >
@@ -207,7 +207,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
           {filteredItems.map((item) => (
             <div key={item.id} className="relative group animate-in slide-in-from-left-2 duration-300">
               <div className="absolute -left-[23px] top-2 w-3 h-3 rounded-full bg-primary ring-4 ring-white z-10 shadow-sm"></div>
-              
+
               <div className="glass-card rounded-[2.5rem] p-6 shadow-soft border-l-4 border-l-secondary hover:translate-x-1 transition-all">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
@@ -224,7 +224,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
                 {item.note && <p className="text-xs text-gray-500 mb-5 leading-relaxed italic bg-gray-50 p-3 rounded-2xl border border-gray-100 whitespace-pre-wrap">{item.note}</p>}
 
                 {item.mapsUrl && (
-                  <a 
+                  <a
                     href={item.mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -256,9 +256,9 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
               {/* 新增日期選擇欄位 */}
               <div>
                 <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">安排日期</label>
-                <select 
+                <select
                   value={itemForm.date}
-                  onChange={e => setItemForm({...itemForm, date: e.target.value})}
+                  onChange={e => setItemForm({ ...itemForm, date: e.target.value })}
                   className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20"
                 >
                   {allDates.map(date => (
@@ -270,18 +270,18 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">抵達時間</label>
-                  <input 
-                    type="time" 
+                  <input
+                    type="time"
                     value={itemForm.startTime}
-                    onChange={e => setItemForm({...itemForm, startTime: e.target.value})}
-                    className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20" 
+                    onChange={e => setItemForm({ ...itemForm, startTime: e.target.value })}
+                    className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">類型標籤</label>
-                  <select 
+                  <select
                     value={itemForm.type}
-                    onChange={e => setItemForm({...itemForm, type: e.target.value as ItemType})}
+                    onChange={e => setItemForm({ ...itemForm, type: e.target.value as ItemType })}
                     className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20"
                   >
                     {Object.values(ItemType).map(t => <option key={t} value={t}>{t}</option>)}
@@ -290,32 +290,32 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
               </div>
               <div>
                 <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">地點名稱</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="輸入景點或餐廳名稱..."
                   value={itemForm.location}
-                  onChange={e => setItemForm({...itemForm, location: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20" 
+                  onChange={e => setItemForm({ ...itemForm, location: e.target.value })}
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
                 <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">詳細備註</label>
-                <textarea 
+                <textarea
                   rows={3}
                   placeholder="想吃什麼？注意什麼？..."
                   value={itemForm.note}
-                  onChange={e => setItemForm({...itemForm, note: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-4 text-sm border-none leading-relaxed focus:ring-2 focus:ring-primary/20" 
+                  onChange={e => setItemForm({ ...itemForm, note: e.target.value })}
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-4 text-sm border-none leading-relaxed focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
                 <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">地圖連結 (選填)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="https://..."
                   value={itemForm.mapsUrl}
-                  onChange={e => setItemForm({...itemForm, mapsUrl: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20" 
+                  onChange={e => setItemForm({ ...itemForm, mapsUrl: e.target.value })}
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -333,27 +333,27 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
       {editType === 'FLIGHT' && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200 shadow-2xl">
-            <h3 className="text-xl font-black text-primary font-serif mb-6 flex items-center gap-2"><Plane size={20}/> 編輯航班</h3>
+            <h3 className="text-xl font-black text-primary font-serif mb-6 flex items-center gap-2"><Plane size={20} /> 編輯航班</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <input 
+                <input
                   type="text" placeholder="航班號" value={tempFlight.flightNo}
-                  onChange={e => setTempFlight({...tempFlight, flightNo: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                  onChange={e => setTempFlight({ ...tempFlight, flightNo: e.target.value })}
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none"
                 />
-                <input 
+                <input
                   type="text" placeholder="時間" value={tempFlight.time}
-                  onChange={e => setTempFlight({...tempFlight, time: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                  onChange={e => setTempFlight({ ...tempFlight, time: e.target.value })}
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none"
                 />
               </div>
-              <input 
+              <input
                 type="text" placeholder="航線" value={tempFlight.airport}
-                onChange={e => setTempFlight({...tempFlight, airport: e.target.value})}
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                onChange={e => setTempFlight({ ...tempFlight, airport: e.target.value })}
+                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none"
               />
             </div>
-            <button 
+            <button
               onClick={() => { const f = [...flights]; f[selectedFlightIdx] = tempFlight; setFlights(f); setEditType('NONE'); }}
               className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all"
             >
@@ -366,25 +366,25 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
       {editType === 'HOTEL' && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200 shadow-2xl">
-            <h3 className="text-xl font-black text-primary font-serif mb-6 flex items-center gap-2"><Building size={20}/> 編輯住宿</h3>
+            <h3 className="text-xl font-black text-primary font-serif mb-6 flex items-center gap-2"><Building size={20} /> 編輯住宿</h3>
             <div className="space-y-4">
-              <input 
+              <input
                 type="text" placeholder="飯店名稱" value={tempHotel.name}
-                onChange={e => setTempHotel({...tempHotel, name: e.target.value})}
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                onChange={e => setTempHotel({ ...tempHotel, name: e.target.value })}
+                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none"
               />
-              <input 
+              <input
                 type="text" placeholder="地址" value={tempHotel.address}
-                onChange={e => setTempHotel({...tempHotel, address: e.target.value})}
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                onChange={e => setTempHotel({ ...tempHotel, address: e.target.value })}
+                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none"
               />
-              <input 
+              <input
                 type="text" placeholder="地圖連結" value={tempHotel.mapsUrl}
-                onChange={e => setTempHotel({...tempHotel, mapsUrl: e.target.value})}
-                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                onChange={e => setTempHotel({ ...tempHotel, mapsUrl: e.target.value })}
+                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none"
               />
             </div>
-            <button 
+            <button
               onClick={() => { setAccommodation(tempHotel); setEditType('NONE'); }}
               className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all"
             >
@@ -394,7 +394,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
         </div>
       )}
 
-      <Modal 
+      <Modal
         isOpen={isDelModalOpen}
         onClose={() => setIsDelModalOpen(false)}
         onConfirm={handleDeleteConfirm}

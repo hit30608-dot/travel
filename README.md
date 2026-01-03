@@ -1,20 +1,46 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# KyotoTrip
 
-# Run and deploy your AI Studio app
+A travel planning application built with React and Vite.
 
-This contains everything you need to run your app locally.
+## 🚀 Getting Started
 
-View your app in AI Studio: https://ai.studio/apps/drive/1Gw4EDYXI9OToQT1Fz4AiLmkvr_9LYI-L
+### Prerequisites
+- Node.js (v20 or higher recommended)
+- npm
 
-## Run Locally
+### Installation
 
-**Prerequisites:**  Node.js
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables:
+   - Copy `.env.example` to `.env` (if available) or create a `.env` file.
+   - Add your API keys (e.g., `GEMINI_API_KEY`).
 
+### Development
+Start the development server:
+```bash
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Build
+Build for production:
+```bash
+npm run build
+```
+
+## 📦 Deployment
+This project is configured for automated deployment to GitHub Pages via GitHub Actions.
+
+1. Push your changes to the `main` branch.
+2. The `Deploy to GitHub Pages` workflow will automatically build and deploy.
+3. Ensure "GitHub Pages" is enabled in your repository settings (Settings -> Pages -> Build and deployment -> Source: GitHub Actions).
+
+## 🛠 Tech Stack
+- **Framework**: React 19
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS (inferred from components)
+- **Icons**: Lucide React
+- **AI**: Google GenAI
