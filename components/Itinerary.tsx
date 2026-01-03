@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Clock, MapPin, Building, Plane, Trash2, PlusCircle, Edit3, 
   Calendar, X, Save, ChevronLeft, ChevronRight
@@ -12,6 +12,24 @@ interface ItineraryProps {
 }
 
 const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
+  // 生成旅程期間的所有日期
+  const allDates = useMemo(() => {
+    const dates: string[] = [];
+    let curr = new Date(tripSettings.startDate);
+    const end = new Date(tripSettings.endDate);
+    
+    // 安全檢查，避免無限循環
+    const maxDays = 30; 
+    let count = 0;
+
+    while (curr <= end && count < maxDays) {
+      dates.push(curr.toISOString().split('T')[0]);
+      curr.setDate(curr.getDate() + 1);
+      count++;
+    }
+    return dates.length > 0 ? dates : [tripSettings.startDate];
+  }, [tripSettings.startDate, tripSettings.endDate]);
+
   const [items, setItems] = useState<ItineraryItem[]>([
     { id: '1', date: '2024-11-15', startTime: '09:00', type: ItemType.SIGHTSEEING, location: '渡月橋', note: '早上適合散步，風景極佳', mapsUrl: 'https://maps.app.goo.gl/arashiyama' },
     { id: '2', date: '2024-11-15', startTime: '12:00', type: ItemType.FOOD, location: '嵐山 蕎麥麵', note: '需提前排隊', mapsUrl: 'https://maps.app.goo.gl/soba' }
@@ -31,6 +49,13 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
 
   // 當前選取的查看日期
   const [currentDate, setCurrentDate] = useState(tripSettings.startDate);
+
+  // 當旅程開始日期變更時，重置當前日期
+  useEffect(() => {
+    if (!allDates.includes(currentDate)) {
+      setCurrentDate(allDates[0]);
+    }
+  }, [allDates, currentDate]);
 
   // Modal 狀態
   const [isDelModalOpen, setIsDelModalOpen] = useState(false);
@@ -71,13 +96,13 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
   };
 
   const saveItemForm = () => {
-    if (!itemForm.location) return;
+    if (!itemForm.location || !itemForm.date) return;
     if (isEditingItem) {
       setItems(items.map(i => i.id === itemForm.id ? (itemForm as ItineraryItem) : i));
     } else {
       const newItem: ItineraryItem = {
         id: Date.now().toString(),
-        date: currentDate,
+        date: itemForm.date,
         startTime: itemForm.startTime || '10:00',
         type: itemForm.type as ItemType,
         location: itemForm.location || '',
@@ -87,6 +112,16 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
       setItems([...items, newItem]);
     }
     setEditType('NONE');
+  };
+
+  const handlePrevDay = () => {
+    const idx = allDates.indexOf(currentDate);
+    if (idx > 0) setCurrentDate(allDates[idx - 1]);
+  };
+
+  const handleNextDay = () => {
+    const idx = allDates.indexOf(currentDate);
+    if (idx < allDates.length - 1) setCurrentDate(allDates[idx + 1]);
   };
 
   return (
@@ -127,13 +162,27 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
       </section>
 
       {/* 日期切換器 */}
-      <div className="flex items-center justify-between bg-white rounded-full p-2 shadow-soft border border-gray-50">
-        <button className="p-2 text-gray-300 hover:text-primary transition-colors"><ChevronLeft size={20} /></button>
+      <div className="flex items-center justify-between bg-white rounded-full p-2 shadow-soft border border-gray-100">
+        <button 
+          onClick={handlePrevDay}
+          disabled={currentDate === allDates[0]}
+          className={`p-2 transition-colors ${currentDate === allDates[0] ? 'text-gray-100' : 'text-primary hover:bg-gray-50 rounded-full'}`}
+        >
+          <ChevronLeft size={24} />
+        </button>
         <div className="flex flex-col items-center">
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">目前顯示</span>
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            DAY {allDates.indexOf(currentDate) + 1}
+          </span>
           <span className="text-sm font-black text-primary font-serif">{currentDate}</span>
         </div>
-        <button className="p-2 text-gray-300 hover:text-primary transition-colors"><ChevronRight size={20} /></button>
+        <button 
+          onClick={handleNextDay}
+          disabled={currentDate === allDates[allDates.length - 1]}
+          className={`p-2 transition-colors ${currentDate === allDates[allDates.length - 1] ? 'text-gray-100' : 'text-primary hover:bg-gray-50 rounded-full'}`}
+        >
+          <ChevronRight size={24} />
+        </button>
       </div>
 
       {/* 每日行程時間軸 */}
@@ -143,16 +192,20 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
             <Calendar size={20} /> 每日明細
           </h2>
           <button 
-            onClick={() => { setIsEditingItem(false); setItemForm({ date: currentDate, type: ItemType.SIGHTSEEING }); setEditType('ITEM_FORM'); }}
+            onClick={() => { 
+              setIsEditingItem(false); 
+              setItemForm({ date: currentDate, type: ItemType.SIGHTSEEING, startTime: '10:00', location: '', note: '', mapsUrl: '' }); 
+              setEditType('ITEM_FORM'); 
+            }}
             className="bg-secondary text-white p-3 rounded-2xl shadow-lg shadow-secondary/20 hover:scale-110 transition-all"
           >
             <PlusCircle size={24} />
           </button>
         </div>
 
-        <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-0 before:w-0.5 before:bg-primary/10">
+        <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-0 before:w-0.5 before:bg-primary/10 min-h-[100px]">
           {filteredItems.map((item) => (
-            <div key={item.id} className="relative group">
+            <div key={item.id} className="relative group animate-in slide-in-from-left-2 duration-300">
               <div className="absolute -left-[23px] top-2 w-3 h-3 rounded-full bg-primary ring-4 ring-white z-10 shadow-sm"></div>
               
               <div className="glass-card rounded-[2.5rem] p-6 shadow-soft border-l-4 border-l-secondary hover:translate-x-1 transition-all">
@@ -168,7 +221,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
                 </div>
 
                 <h4 className="font-black text-gray-800 text-lg mb-2 font-serif">{item.location}</h4>
-                {item.note && <p className="text-xs text-gray-500 mb-5 leading-relaxed italic bg-gray-50 p-3 rounded-2xl border border-gray-100">{item.note}</p>}
+                {item.note && <p className="text-xs text-gray-500 mb-5 leading-relaxed italic bg-gray-50 p-3 rounded-2xl border border-gray-100 whitespace-pre-wrap">{item.note}</p>}
 
                 {item.mapsUrl && (
                   <a 
@@ -184,7 +237,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
             </div>
           ))}
           {filteredItems.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-[2rem] border-2 border-dashed border-gray-100">
+            <div className="text-center py-12 bg-white rounded-[2rem] border-2 border-dashed border-gray-100 animate-in fade-in duration-500">
               <p className="text-xs text-gray-300 font-bold uppercase tracking-widest">今日尚無安排行程</p>
             </div>
           )}
@@ -197,9 +250,23 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
           <div className="bg-white w-full max-w-sm rounded-[3rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-black text-primary font-serif">{isEditingItem ? '編輯行程' : '新增行程'}</h3>
-              <button onClick={() => setEditType('NONE')} className="text-gray-300"><X size={24} /></button>
+              <button onClick={() => setEditType('NONE')} className="text-gray-300 hover:text-gray-500"><X size={24} /></button>
             </div>
             <div className="space-y-5">
+              {/* 新增日期選擇欄位 */}
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">安排日期</label>
+                <select 
+                  value={itemForm.date}
+                  onChange={e => setItemForm({...itemForm, date: e.target.value})}
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20"
+                >
+                  {allDates.map(date => (
+                    <option key={date} value={date}>{date} (Day {allDates.indexOf(date) + 1})</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">抵達時間</label>
@@ -228,7 +295,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
                   placeholder="輸入景點或餐廳名稱..."
                   value={itemForm.location}
                   onChange={e => setItemForm({...itemForm, location: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20" 
                 />
               </div>
               <div>
@@ -238,7 +305,7 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
                   placeholder="想吃什麼？注意什麼？..."
                   value={itemForm.note}
                   onChange={e => setItemForm({...itemForm, note: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-4 text-sm border-none leading-relaxed" 
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-4 text-sm border-none leading-relaxed focus:ring-2 focus:ring-primary/20" 
                 />
               </div>
               <div>
@@ -248,12 +315,12 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
                   placeholder="https://..."
                   value={itemForm.mapsUrl}
                   onChange={e => setItemForm({...itemForm, mapsUrl: e.target.value})}
-                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+                  className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none focus:ring-2 focus:ring-primary/20" 
                 />
               </div>
             </div>
             <div className="flex gap-4 mt-10">
-              <button onClick={() => setEditType('NONE')} className="flex-1 py-4 text-gray-400 font-bold bg-gray-50 rounded-2xl">取消</button>
+              <button onClick={() => setEditType('NONE')} className="flex-1 py-4 text-gray-400 font-bold bg-gray-50 rounded-2xl active:scale-95 transition-transform">取消</button>
               <button onClick={saveItemForm} className="flex-2 py-4 px-8 bg-secondary text-white font-black rounded-2xl shadow-xl shadow-secondary/20 active:scale-95 transition-all">
                 {isEditingItem ? '更新行程' : '加入行程'}
               </button>
@@ -262,10 +329,10 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
         </div>
       )}
 
-      {/* 航班編輯 Modal */}
+      {/* 航班與住宿編輯彈窗 (維持原樣，但確保按鈕可按) */}
       {editType === 'FLIGHT' && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200">
+          <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200 shadow-2xl">
             <h3 className="text-xl font-black text-primary font-serif mb-6 flex items-center gap-2"><Plane size={20}/> 編輯航班</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -288,7 +355,38 @@ const Itinerary: React.FC<ItineraryProps> = ({ tripSettings }) => {
             </div>
             <button 
               onClick={() => { const f = [...flights]; f[selectedFlightIdx] = tempFlight; setFlights(f); setEditType('NONE'); }}
-              className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20"
+              className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all"
+            >
+              儲存更改
+            </button>
+          </div>
+        </div>
+      )}
+
+      {editType === 'HOTEL' && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200 shadow-2xl">
+            <h3 className="text-xl font-black text-primary font-serif mb-6 flex items-center gap-2"><Building size={20}/> 編輯住宿</h3>
+            <div className="space-y-4">
+              <input 
+                type="text" placeholder="飯店名稱" value={tempHotel.name}
+                onChange={e => setTempHotel({...tempHotel, name: e.target.value})}
+                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+              />
+              <input 
+                type="text" placeholder="地址" value={tempHotel.address}
+                onChange={e => setTempHotel({...tempHotel, address: e.target.value})}
+                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+              />
+              <input 
+                type="text" placeholder="地圖連結" value={tempHotel.mapsUrl}
+                onChange={e => setTempHotel({...tempHotel, mapsUrl: e.target.value})}
+                className="w-full bg-gray-50 rounded-2xl px-4 py-3 text-sm border-none" 
+              />
+            </div>
+            <button 
+              onClick={() => { setAccommodation(tempHotel); setEditType('NONE'); }}
+              className="w-full mt-8 bg-primary text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all"
             >
               儲存更改
             </button>
