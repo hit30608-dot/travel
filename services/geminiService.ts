@@ -3,10 +3,16 @@ import { GoogleGenAI } from "@google/genai";
 
 // Fixed: Check for API Key before initialization
 const getApiKey = () => {
-  // Priority: 1. Environment Variable 2. LocalStorage
-  if (typeof process !== 'undefined' && (process.env.API_KEY || process.env.GEMINI_API_KEY)) {
-    return process.env.API_KEY || process.env.GEMINI_API_KEY;
+  // Priority: 1. Environment Variable (Vite replaces check) 2. LocalStorage
+  // Note: Vite replaces process.env.GEMINI_API_KEY with the actual string, so we can access it directly.
+  try {
+    if (process.env.API_KEY || process.env.GEMINI_API_KEY) {
+      return process.env.API_KEY || process.env.GEMINI_API_KEY;
+    }
+  } catch (e) {
+    // Ignore error if process is not defined and replacement didn't happen (unlikely in Vite)
   }
+
   if (typeof localStorage !== 'undefined') {
     return localStorage.getItem('gemini_api_key');
   }
@@ -60,8 +66,16 @@ export class GeminiService {
       });
       return response.text || "Translation failed.";
     } catch (error: any) {
-      console.error("Translation error:", error);
-      if (error.message?.includes('API key')) {
+      console.error("Translation error details:", error);
+
+      const errorMessage = error.message || error.toString();
+      const isApiKeyError =
+        errorMessage.match(/api key/i) ||
+        error.status === 400 ||
+        error.statusText === 'Bad Request' ||
+        (error.response && error.response.status === 400);
+
+      if (isApiKeyError) {
         throw new Error("INVALID_API_KEY");
       }
       return "Error connecting to AI service.";
